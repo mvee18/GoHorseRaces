@@ -16,3 +16,9 @@ func TestGenerateHorse(t *testing.T) {
 		}
 	})
 }
+
+func TestNormalDistribution(t *testing.T) {
+	t.Run("normal value?", func(t *testing.T) {
+		normalDistribution()
+	})
+}

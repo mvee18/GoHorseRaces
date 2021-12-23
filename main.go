@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -73,6 +74,11 @@ func GenerateJockey() *Jockey {
 	j.Benefit = r1.Float64() + 1
 
 	return &j
+}
+
+func normalDistribution() {
+	n := r1.NormFloat64()
+	fmt.Println(n)
 }
 
 func main() {
