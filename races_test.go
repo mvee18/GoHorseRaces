@@ -30,6 +30,23 @@ func TestGenerateRace(t *testing.T) {
 		horses := []Horse{h1, h2}
 
 		normalizeSpeed(horses)
+
+		h1want := h1.Speed / h1.Speed
+		h2want := h2.Speed / h1.Speed
+
+		if horses[0].Speed != h1want {
+			t.Errorf("wrong h1 speed, wanted %v got %v\n", h1want, horses[0].Speed)
+		}
+
+		if horses[1].Speed != h2want {
+			t.Errorf("wrong h2 speed, wanted %v got %v\n", h2want, horses[1].Speed)
+		}
 	})
 
+}
+
+func TestShowRace(t *testing.T) {
+	t.Run("testing race", func(t *testing.T) {
+		ShowRace()
+	})
 }
