@@ -99,10 +99,10 @@ func addHorseBar(index int, bar *mpb.Bar, barTot int, h Horse, wg *sync.WaitGrou
 	for i <= barTot {
 		if determineIfProceed(&h) {
 			bar.Increment()
-			time.Sleep(time.Millisecond * 1)
+			time.Sleep(time.Millisecond * 10)
 			i++
 		} else {
-			time.Sleep(time.Millisecond * 1)
+			time.Sleep(time.Millisecond * 10)
 		}
 	}
 
