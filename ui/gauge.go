@@ -14,7 +14,7 @@
 
 // Binary gaugedemo displays a couple of Gauge widgets.
 // Exist when 'q' is pressed.
-package main
+package ui
 
 import (
 	"context"
