@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"sync"
 	"testing"
+	"text/tabwriter"
 )
 
 func TestGenerateRace(t *testing.T) {
@@ -49,4 +52,43 @@ func TestShowRace(t *testing.T) {
 	t.Run("testing race", func(t *testing.T) {
 		ShowRace()
 	})
+}
+
+// Not sure why the test prints blank string to the buffer?
+func TestPrintResults(t *testing.T) {
+	hs := []Horse{
+		{
+			Name: "first",
+			Odds: 26.1,
+		},
+		{
+			Name: "second",
+			Odds: 6.0,
+		},
+		{
+			Name: "third",
+			Odds: 3.0,
+		},
+	}
+
+	results := make(chan int, 3)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	for i := 0; i < len(hs); i++ {
+		go func(i int) {
+			defer wg.Done()
+			results <- i
+		}(i)
+	}
+
+	wg.Wait()
+
+	var b bytes.Buffer
+	w := tabwriter.NewWriter(&b, 0, 0, 2, ' ', 0)
+
+	printResults(w, hs, results)
+
+	fmt.Println(len(b.Bytes()))
 }

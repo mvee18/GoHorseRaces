@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"os"
 	"runtime"
 	"sort"
 	"sync"
+	"text/tabwriter"
 	"time"
 
+	"github.com/cheynewallace/tabby"
 	"github.com/vbauerster/mpb"
 	"github.com/vbauerster/mpb/decor"
 )
@@ -52,11 +56,15 @@ func normalizeSpeed(h []Horse) {
 
 func makeRaceBars(hs []Horse) {
 	// start the progress bars in go routines
+	results := make(chan int, len(hs))
 	var wg sync.WaitGroup
 
 	p := mpb.New(mpb.WithWaitGroup(&wg))
 	total, numBars := 100, len(hs)
 	// start := time.Now()
+
+	// Without the shuffling, the order of the horses is always least to greatest.
+	Shuffle(hs)
 
 	wg.Add(numBars)
 
@@ -78,7 +86,7 @@ func makeRaceBars(hs []Horse) {
 			),
 		)
 
-		go addHorseBar(i, bar, total, hs[i], &wg)
+		go addHorseBar(i, bar, total, hs[i], &wg, results)
 	}
 
 	/*
@@ -89,10 +97,41 @@ func makeRaceBars(hs []Horse) {
 	*/
 
 	wg.Wait()
-	time.Sleep(time.Millisecond * 100)
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	printResults(w, hs, results)
+
+	w.Flush()
 }
 
-func addHorseBar(index int, bar *mpb.Bar, barTot int, h Horse, wg *sync.WaitGroup) {
+func printResults(w *tabwriter.Writer, hs []Horse, results chan int) {
+	t := tabby.NewCustom(w)
+
+	fmt.Printf("The standings are as follows:\n")
+	t.AddHeader("PLACEMENT", "NAME", "ODDS")
+
+	for i := 0; i < len(hs); i++ {
+		select {
+		case winner := <-results:
+			h := hs[winner]
+			t.AddLine(i, h.Name, h.Odds)
+		}
+	}
+
+}
+
+func Shuffle(vals []Horse) {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	for len(vals) > 0 {
+		n := len(vals)
+		randIndex := r.Intn(n)
+		vals[n-1], vals[randIndex] = vals[randIndex], vals[n-1]
+		vals = vals[:n-1]
+	}
+}
+
+func addHorseBar(index int, bar *mpb.Bar, barTot int, h Horse, wg *sync.WaitGroup, out chan<- int) {
 	defer wg.Done()
 
 	i := 0
@@ -105,6 +144,9 @@ func addHorseBar(index int, bar *mpb.Bar, barTot int, h Horse, wg *sync.WaitGrou
 			time.Sleep(time.Millisecond * 10)
 		}
 	}
+
+	// Write the
+	out <- index
 
 	// fmt.Printf("Horse %d, %s, has finished with speed %.2f!\n", index, h.Name, h.Speed)
 
