@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"horses/economy"
+	"horses/models"
 	"sync"
 	"testing"
 	"text/tabwriter"
@@ -20,19 +22,19 @@ func TestGenerateRace(t *testing.T) {
 	})
 
 	t.Run("Test normalize speed", func(t *testing.T) {
-		h1 := Horse{
+		h1 := models.Horse{
 			Name:  "tester1",
-			Speed: 8.123,
+			Speed: 8.0,
 		}
 
-		h2 := Horse{
+		h2 := models.Horse{
 			Name:  "tester2",
-			Speed: 123.67,
+			Speed: 64.00,
 		}
 
-		horses := []Horse{h1, h2}
+		horses := []models.Horse{h1, h2}
 
-		normalizeSpeed(horses)
+		economy.NormalizeSpeed(horses)
 
 		h1want := h1.Speed / h1.Speed
 		h2want := h2.Speed / h1.Speed
@@ -44,6 +46,7 @@ func TestGenerateRace(t *testing.T) {
 		if horses[1].Speed != h2want {
 			t.Errorf("wrong h2 speed, wanted %v got %v\n", h2want, horses[1].Speed)
 		}
+
 	})
 
 }
@@ -56,7 +59,7 @@ func TestShowRace(t *testing.T) {
 
 // Not sure why the test prints blank string to the buffer?
 func TestPrintResults(t *testing.T) {
-	hs := []Horse{
+	hs := []models.Horse{
 		{
 			Name: "first",
 			Odds: 26.1,

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"horses/models"
 	"math/rand"
 	"os"
 	"runtime"
@@ -15,20 +16,14 @@ import (
 	"github.com/vbauerster/mpb/decor"
 )
 
-type Race struct {
-	Horses  []Horse
-	Length  float64
-	Weather string
-}
-
-func GenerateRace(n int, w string, l float64) Race {
-	h := []Horse{}
+func GenerateRace(n int, w string, l float64) models.Race {
+	h := []models.Horse{}
 
 	for i := 0; i < n; i++ {
-		h = append(h, GenerateHorse())
+		h = append(h, models.GenerateHorse())
 	}
 
-	r := Race{
+	r := models.Race{
 		Horses:  h,
 		Weather: w,
 		Length:  l,
@@ -41,20 +36,7 @@ func GenerateRace(n int, w string, l float64) Race {
 	return r
 }
 
-func normalizeSpeed(h []Horse) {
-	// We need to sort the horses by speed to find the minimum value.
-	sort.SliceStable(h, func(i, j int) bool {
-		return h[i].Speed < h[j].Speed
-	})
-
-	minimumSpeed := h[0].Speed
-
-	for i := 0; i < len(h); i++ {
-		h[i].Speed = h[i].Speed / minimumSpeed
-	}
-}
-
-func makeRaceBars(hs []Horse) {
+func makeRaceBars(hs []models.Horse) {
 	// start the progress bars in go routines
 	results := make(chan int, len(hs))
 	var wg sync.WaitGroup
@@ -105,7 +87,7 @@ func makeRaceBars(hs []Horse) {
 	w.Flush()
 }
 
-func printResults(w *tabwriter.Writer, hs []Horse, results chan int) {
+func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) {
 	t := tabby.NewCustom(w)
 
 	fmt.Printf("The standings are as follows:\n")
@@ -121,7 +103,7 @@ func printResults(w *tabwriter.Writer, hs []Horse, results chan int) {
 
 }
 
-func Shuffle(vals []Horse) {
+func Shuffle(vals []models.Horse) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	for len(vals) > 0 {
 		n := len(vals)
@@ -131,7 +113,7 @@ func Shuffle(vals []Horse) {
 	}
 }
 
-func addHorseBar(index int, bar *mpb.Bar, barTot int, h Horse, wg *sync.WaitGroup, out chan<- int) {
+func addHorseBar(index int, bar *mpb.Bar, barTot int, h models.Horse, wg *sync.WaitGroup, out chan<- int) {
 	defer wg.Done()
 
 	i := 0
@@ -152,7 +134,7 @@ func addHorseBar(index int, bar *mpb.Bar, barTot int, h Horse, wg *sync.WaitGrou
 
 }
 
-func horseRacer(index int, h Horse, wg *sync.WaitGroup) {
+func horseRacer(index int, h models.Horse, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	count := 0
@@ -168,7 +150,7 @@ func horseRacer(index int, h Horse, wg *sync.WaitGroup) {
 	fmt.Printf("Horse %d, %s, has finished with speed %.2f!\n", index, h.Name, h.Speed)
 }
 
-func determineIfProceed(h *Horse) bool {
+func determineIfProceed(h *models.Horse) bool {
 	// The maximum value of the horse speed is 20, since the maximum horse
 	// value is 10, and the maximum horse jocket benefit is 100%.
 	roll := 0.0 + r1.Float64()*(20.0-0.0)
