@@ -9,13 +9,13 @@ import (
 )
 
 var NameGenerator namegenerator.Generator
-var r1 *rand.Rand
+var R1 *rand.Rand
 
 func init() {
 	seed := time.Now().UTC().UnixNano()
 	NameGenerator = namegenerator.NewNameGenerator(seed)
 
-	r1 = rand.New(rand.NewSource(time.Now().UnixNano()))
+	R1 = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
 type Horse struct {
@@ -29,14 +29,14 @@ type Horse struct {
 func (h *Horse) generateRecord() {
 	// A random number of a random number within 10 for the total of races
 	// the horse has participated in.
-	total := r1.Intn(10) + 5
+	total := R1.Intn(10) + 5
 
-	wins := r1.Intn(total)
+	wins := R1.Intn(total)
 
 	fmt.Printf("tot - win: %d\n", total-wins)
-	place := r1.Intn(total - wins)
+	place := R1.Intn(total - wins)
 
-	shows := r1.Intn(total - wins - place)
+	shows := R1.Intn(total - wins - place)
 
 	h.Record = Record{
 		Wins:   wins,
@@ -75,7 +75,7 @@ func GenerateJockey() *Jockey {
 		This would be between 0 and 1 but we will multiply so add one to be a
 		multiplicative bonus.
 	*/
-	j.Benefit = r1.Float64() + 1
+	j.Benefit = R1.Float64() + 1
 
 	return &j
 }
@@ -97,5 +97,5 @@ func generateName() string {
 }
 
 func generateSpeed() float64 {
-	return 0.0 + r1.Float64()*(10.0-0.0)
+	return 0.0 + R1.Float64()*(10.0-0.0)
 }

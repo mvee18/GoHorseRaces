@@ -1,8 +1,8 @@
 package economy
 
 import (
+	"fmt"
 	"horses/models"
-	"math/rand"
 	"sort"
 )
 
@@ -25,7 +25,7 @@ func CalculateOdds(bet Money, total Money) Money {
 
 func DistributeMoney(o []OddsPool) {
 	// Somewhere between 0-100000, but mostly around 50,000.
-	TotalWager := rand.NormFloat64() * 100000
+	// TotalWager := rand.NormFloat64() * 100000
 
 }
 
@@ -38,21 +38,37 @@ func fractionalSpeed(total Money, hs []models.Horse) {
 		totalSpeed += v.Speed
 	}
 
+	previousProb := 0.0
 	for i, v := range hs {
 		op := OddsPool{
 			Index:     i,
 			Wager:     0.0,
-			Frequency: v.Speed / totalSpeed,
+			Frequency: previousProb + v.Speed/totalSpeed,
 		}
 
-		oddsPools = append(oddsPools, op)
+		previousProb = op.Frequency
+		oddsPools[i] = op
 	}
+
+	rouletteDistribution(total, &oddsPools)
 }
 
 func rouletteDistribution(total Money, o *[]OddsPool) {
-	for i, v := range OddsPool {
+	sort.SliceStable(*o, func(i, j int) bool {
+		return (*o)[i].Frequency < (*o)[j].Frequency
+	})
 
+	for j := 0; j < int(total); j++ {
+		chance := models.R1.Float64()
+		for i, v := range *o {
+			if chance < v.Frequency {
+				(*o)[i].Wager++
+				break
+			}
+		}
 	}
+
+	fmt.Println(o)
 }
 
 func NormalizeSpeed(h []models.Horse) {
