@@ -101,6 +101,7 @@ func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) {
 		}
 	}
 
+	t.Print()
 }
 
 func Shuffle(vals []models.Horse) {

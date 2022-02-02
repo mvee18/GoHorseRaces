@@ -93,5 +93,5 @@ func TestPrintResults(t *testing.T) {
 
 	printResults(w, hs, results)
 
-	fmt.Println(len(b.Bytes()))
+	fmt.Println(b.String())
 }

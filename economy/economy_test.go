@@ -38,19 +38,32 @@ func TestFractionalSpeed(t *testing.T) {
 			},
 		}
 
-		fractionalSpeed(10000.0, hs)
+		fractionalSpeed(10000.0, &hs, MockCalculateOdds)
+
+		obs := []float64{}
+		for _, v := range hs {
+			obs = append(obs, v.Odds)
+		}
+
+		exp := []float64{1250, 2500, 6250}
+
+		x := ChiSquareHelper(t, exp, obs)
+
+		if x > 5.991 {
+			t.Errorf("chisq value greater than critical value of 2 df, got %v\n", x)
+		}
 
 	})
 }
 
-func ChiSquareHelper(t *testing.T, total float64, n []float64, o []float64) float64 {
+func ChiSquareHelper(t *testing.T, exp []float64, o []float64) float64 {
 	t.Helper()
 
-	dif := make([]float64, len(n))
+	dif := make([]float64, len(exp))
 
 	for i, obs := range o {
 		// o - e
-		dif[i] = math.Pow((obs-n[i]), 2) / n[i]
+		dif[i] = math.Pow((obs-exp[i]), 2) / exp[i]
 	}
 
 	chisq := 0.0
@@ -60,4 +73,9 @@ func ChiSquareHelper(t *testing.T, total float64, n []float64, o []float64) floa
 	}
 
 	return chisq
+}
+
+// This just sets the odds to the wager so we can verify that the odds are correct with ChiSq.
+func MockCalculateOdds(bet Money, total Money) float64 {
+	return float64(bet)
 }

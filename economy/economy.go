@@ -1,7 +1,6 @@
 package economy
 
 import (
-	"fmt"
 	"horses/models"
 	"sort"
 )
@@ -16,11 +15,11 @@ type OddsPool struct {
 
 const takePercentage = 0.15
 
-func CalculateOdds(bet Money, total Money) Money {
+func CalculateOdds(bet Money, total Money) float64 {
 	total -= total * takePercentage
 	leftOver := total - bet
 
-	return leftOver / bet
+	return float64(leftOver) / float64(bet)
 }
 
 func DistributeMoney(o []OddsPool) {
@@ -29,17 +28,17 @@ func DistributeMoney(o []OddsPool) {
 
 }
 
-func fractionalSpeed(total Money, hs []models.Horse) {
-	oddsPools := make([]OddsPool, len(hs))
+func fractionalSpeed(total Money, hs *[]models.Horse, c func(Money, Money) float64) {
+	oddsPools := make([]OddsPool, len(*hs))
 	totalSpeed := 0.0
 
 	// Sum up speed.
-	for _, v := range hs {
+	for _, v := range *hs {
 		totalSpeed += v.Speed
 	}
 
 	previousProb := 0.0
-	for i, v := range hs {
+	for i, v := range *hs {
 		op := OddsPool{
 			Index:     i,
 			Wager:     0.0,
@@ -51,6 +50,12 @@ func fractionalSpeed(total Money, hs []models.Horse) {
 	}
 
 	rouletteDistribution(total, &oddsPools)
+
+	for i := range *hs {
+		(*hs)[i].Odds = c(oddsPools[i].Wager, total)
+	}
+
+	// fmt.Println(hs)
 }
 
 func rouletteDistribution(total Money, o *[]OddsPool) {
@@ -68,7 +73,7 @@ func rouletteDistribution(total Money, o *[]OddsPool) {
 		}
 	}
 
-	fmt.Println(o)
+	// 	fmt.Println(o)
 }
 
 func NormalizeSpeed(h []models.Horse) {
