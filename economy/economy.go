@@ -22,10 +22,11 @@ func CalculateOdds(bet Money, total Money) float64 {
 	return float64(leftOver) / float64(bet)
 }
 
-func DistributeMoney(o []OddsPool) {
+func DistributeMoney(r *models.Race) {
 	// Somewhere between 0-100000, but mostly around 50,000.
-	// TotalWager := rand.NormFloat64() * 100000
+	totalWager := models.R1.NormFloat64()*25000 + 50000
 
+	fractionalSpeed(Money(totalWager), &r.Horses, CalculateOdds)
 }
 
 func fractionalSpeed(total Money, hs *[]models.Horse, c func(Money, Money) float64) {

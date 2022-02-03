@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"horses/economy"
 	"horses/models"
 	"math/rand"
 	"os"
@@ -32,6 +33,8 @@ func GenerateRace(n int, w string, l float64) models.Race {
 	sort.SliceStable(h, func(i, j int) bool {
 		return h[i].Speed < h[j].Speed
 	})
+
+	economy.DistributeMoney(&r)
 
 	return r
 }
@@ -97,7 +100,7 @@ func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) {
 		select {
 		case winner := <-results:
 			h := hs[winner]
-			t.AddLine(i, h.Name, h.Odds)
+			t.AddLine(i, h.Name, fmt.Sprintf("%.2f", h.Odds))
 		}
 	}
 
