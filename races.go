@@ -124,10 +124,10 @@ func addHorseBar(index int, bar *mpb.Bar, barTot int, h models.Horse, wg *sync.W
 	for i <= barTot {
 		if determineIfProceed(&h) {
 			bar.Increment()
-			time.Sleep(time.Millisecond * 10)
+			time.Sleep(time.Millisecond * 3)
 			i++
 		} else {
-			time.Sleep(time.Millisecond * 10)
+			time.Sleep(time.Millisecond * 3)
 		}
 	}
 
@@ -170,5 +170,27 @@ func ShowRace() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	r := GenerateRace(6, "fast", 0.75)
 
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	printRace(w, r.Horses)
+
 	makeRaceBars(r.Horses)
+}
+
+func printRace(w *tabwriter.Writer, hs []models.Horse) {
+	t := tabby.NewCustom(w)
+
+	sort.SliceStable(hs, func(i, j int) bool {
+		return hs[i].Odds < hs[j].Odds
+	})
+
+	fmt.Printf("The standings are as follows:\n")
+	t.AddHeader("NAME", "ODDS", "WINS", "PLACES", "SHOWS")
+
+	for i := 0; i < len(hs); i++ {
+		h := hs[i]
+		t.AddLine(h.Name, fmt.Sprintf("%.2f", h.Odds), h.Record.Wins, h.Record.Places, h.Record.Shows)
+	}
+
+	t.Print()
+
 }

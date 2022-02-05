@@ -31,11 +31,11 @@ func DistributeMoney(r *models.Race) {
 
 func fractionalSpeed(total Money, hs *[]models.Horse, c func(Money, Money) float64) {
 	oddsPools := make([]OddsPool, len(*hs))
-	totalSpeed := 0.0
+	totalAttractiveness := 0.0
 
 	// Sum up speed.
 	for _, v := range *hs {
-		totalSpeed += v.Speed
+		totalAttractiveness += v.Attractiveness
 	}
 
 	previousProb := 0.0
@@ -43,7 +43,7 @@ func fractionalSpeed(total Money, hs *[]models.Horse, c func(Money, Money) float
 		op := OddsPool{
 			Index:     i,
 			Wager:     0.0,
-			Frequency: previousProb + v.Speed/totalSpeed,
+			Frequency: previousProb + v.Attractiveness/totalAttractiveness,
 		}
 
 		previousProb = op.Frequency

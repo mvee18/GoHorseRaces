@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -11,6 +10,10 @@ import (
 var NameGenerator namegenerator.Generator
 var R1 *rand.Rand
 
+const MaxSpeed = 10.0
+const MinSpeed = 1.0
+const SpeedFraction = 0.40
+
 func init() {
 	seed := time.Now().UTC().UnixNano()
 	NameGenerator = namegenerator.NewNameGenerator(seed)
@@ -19,9 +22,10 @@ func init() {
 }
 
 type Horse struct {
-	Name  string
-	Speed float64
-	Odds  float64
+	Name           string
+	Attractiveness float64
+	Speed          float64
+	Odds           float64
 	Jockey
 	Record
 }
@@ -33,7 +37,7 @@ func (h *Horse) generateRecord() {
 
 	wins := R1.Intn(total)
 
-	fmt.Printf("tot - win: %d\n", total-wins)
+	// fmt.Printf("tot - win: %d\n", total-wins)
 	place := R1.Intn(total - wins)
 
 	shows := R1.Intn(total - wins - place)
@@ -81,14 +85,24 @@ func GenerateJockey() *Jockey {
 }
 
 func GenerateHorse() Horse {
-	h := Horse{}
-	h.Name = generateName()
-
-	h.Jockey = *GenerateJockey()
+	h := Horse{
+		Name:           generateName(),
+		Attractiveness: 0.0,
+		Speed:          0.0,
+		Odds:           0.0,
+		Jockey:         *GenerateJockey(),
+	}
 
 	h.Speed = generateSpeed() * h.Jockey.Benefit
+	h.calculateAttractiveness()
+	h.generateRecord()
 
 	return h
+}
+
+func (h *Horse) calculateAttractiveness() {
+	random := 0.0 + R1.Float64()*(11.0-0.0)
+	h.Attractiveness = h.Speed*0.50 + random
 }
 
 // Probably could improve the name generator to use "real" names for the jockeys.
@@ -97,5 +111,5 @@ func generateName() string {
 }
 
 func generateSpeed() float64 {
-	return 0.0 + R1.Float64()*(10.0-0.0)
+	return MinSpeed + R1.Float64()*(MaxSpeed-MinSpeed)
 }
