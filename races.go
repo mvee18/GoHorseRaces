@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"horses/economy"
 	"horses/models"
+	"horses/ui"
 	"math/rand"
 	"os"
 	"runtime"
@@ -39,7 +40,7 @@ func GenerateRace(n int, w string, l float64) models.Race {
 	return r
 }
 
-func makeRaceBars(hs []models.Horse) {
+func makeRaceBars(hs []models.Horse) models.Horse {
 	// start the progress bars in go routines
 	results := make(chan int, len(hs))
 	var wg sync.WaitGroup
@@ -85,12 +86,13 @@ func makeRaceBars(hs []models.Horse) {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
-	printResults(w, hs, results)
-
+	winner := printResults(w, hs, results)
 	w.Flush()
+
+	return winner
 }
 
-func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) {
+func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) models.Horse {
 	t := tabby.NewCustom(w)
 
 	fmt.Printf("The standings are as follows:\n")
@@ -105,6 +107,8 @@ func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) {
 	}
 
 	t.Print()
+
+	return hs[0]
 }
 
 func Shuffle(vals []models.Horse) {
@@ -166,14 +170,35 @@ func determineIfProceed(h *models.Horse) bool {
 	return false
 }
 
-func ShowRace() {
+func ShowRace(m *economy.Money) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	r := GenerateRace(6, "fast", 0.75)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	printRace(w, r.Horses)
 
-	makeRaceBars(r.Horses)
+	choiceMap, err := ui.ShowList(getHorseNames(r.Horses))
+	if err != nil {
+		panic(err)
+	}
+
+	winner := makeRaceBars(r.Horses)
+
+	if choiceMap.Name == winner.Name {
+		m.UpdateMoney(choiceMap.Bet, winner.Odds)
+	} else {
+		*m = *m - choiceMap.Bet
+	}
+}
+
+func getHorseNames(h []models.Horse) []string {
+	names := make([]string, len(h))
+
+	for i, v := range h {
+		names[i] = v.Name
+	}
+
+	return names
 }
 
 func printRace(w *tabwriter.Writer, hs []models.Horse) {

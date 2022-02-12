@@ -53,7 +53,8 @@ func TestGenerateRace(t *testing.T) {
 
 func TestShowRace(t *testing.T) {
 	t.Run("testing race", func(t *testing.T) {
-		ShowRace()
+		m := economy.Money(200.0)
+		ShowRace(&m)
 	})
 }
 

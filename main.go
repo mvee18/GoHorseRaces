@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"horses/economy"
 	"math/rand"
 	"time"
 )
@@ -45,6 +46,9 @@ func main() {
 			time.Sleep(time.Millisecond * 20)
 		}
 	*/
+	m := economy.Money(200.0)
 
-	ShowRace()
+	for m > 0.0 {
+		ShowRace(&m)
+	}
 }

@@ -89,3 +89,9 @@ func NormalizeSpeed(h []models.Horse) {
 		h[i].Speed = h[i].Speed / minimumSpeed
 	}
 }
+
+// < ---- User Actions and Inputs ---- >
+
+func (m *Money) UpdateMoney(bet Money, odds float64) {
+	*m = bet * Money(odds)
+}
