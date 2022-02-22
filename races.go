@@ -2,29 +2,30 @@ package main
 
 import (
 	"fmt"
+	"horses/economy"
+	"horses/models"
+	"horses/ui"
+	"math/rand"
+	"os"
 	"runtime"
 	"sort"
 	"sync"
+	"text/tabwriter"
 	"time"
 
+	"github.com/cheynewallace/tabby"
 	"github.com/vbauerster/mpb"
 	"github.com/vbauerster/mpb/decor"
 )
 
-type Race struct {
-	Horses  []Horse
-	Length  float64
-	Weather string
-}
-
-func GenerateRace(n int, w string, l float64) Race {
-	h := []Horse{}
+func GenerateRace(n int, w string, l float64) models.Race {
+	h := []models.Horse{}
 
 	for i := 0; i < n; i++ {
-		h = append(h, GenerateHorse())
+		h = append(h, models.GenerateHorse())
 	}
 
-	r := Race{
+	r := models.Race{
 		Horses:  h,
 		Weather: w,
 		Length:  l,
@@ -34,29 +35,22 @@ func GenerateRace(n int, w string, l float64) Race {
 		return h[i].Speed < h[j].Speed
 	})
 
+	economy.DistributeMoney(&r)
+
 	return r
 }
 
-func normalizeSpeed(h []Horse) {
-	// We need to sort the horses by speed to find the minimum value.
-	sort.SliceStable(h, func(i, j int) bool {
-		return h[i].Speed < h[j].Speed
-	})
-
-	minimumSpeed := h[0].Speed
-
-	for i := 0; i < len(h); i++ {
-		h[i].Speed = h[i].Speed / minimumSpeed
-	}
-}
-
-func makeRaceBars(hs []Horse) {
+func makeRaceBars(hs []models.Horse) models.Horse {
 	// start the progress bars in go routines
+	results := make(chan int, len(hs))
 	var wg sync.WaitGroup
 
 	p := mpb.New(mpb.WithWaitGroup(&wg))
 	total, numBars := 100, len(hs)
 	// start := time.Now()
+
+	// Without the shuffling, the order of the horses is always least to greatest.
+	Shuffle(hs)
 
 	wg.Add(numBars)
 
@@ -78,7 +72,7 @@ func makeRaceBars(hs []Horse) {
 			),
 		)
 
-		go addHorseBar(i, bar, total, hs[i], &wg)
+		go addHorseBar(i, bar, total, hs[i], &wg, results)
 	}
 
 	/*
@@ -88,29 +82,69 @@ func makeRaceBars(hs []Horse) {
 		}
 	*/
 
-	wg.Wait()
-	time.Sleep(time.Millisecond * 100)
+	p.Wait()
+
+	time.Sleep(time.Millisecond * 200)
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	winner := printResults(w, hs, results)
+	w.Flush()
+
+	return winner
 }
 
-func addHorseBar(index int, bar *mpb.Bar, barTot int, h Horse, wg *sync.WaitGroup) {
+func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) models.Horse {
+	t := tabby.NewCustom(w)
+
+	fmt.Printf("The standings are as follows:\n")
+	t.AddHeader("PLACEMENT", "NAME", "ODDS")
+
+	for i := 0; i < len(hs); i++ {
+		select {
+		case winner := <-results:
+			h := hs[winner]
+			t.AddLine(i, h.Name, fmt.Sprintf("%.2f", h.Odds))
+		}
+	}
+
+	t.Print()
+
+	return hs[0]
+}
+
+func Shuffle(vals []models.Horse) {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	for len(vals) > 0 {
+		n := len(vals)
+		randIndex := r.Intn(n)
+		vals[n-1], vals[randIndex] = vals[randIndex], vals[n-1]
+		vals = vals[:n-1]
+	}
+}
+
+func addHorseBar(index int, bar *mpb.Bar, barTot int, h models.Horse, wg *sync.WaitGroup, out chan<- int) {
 	defer wg.Done()
 
 	i := 0
 	for i <= barTot {
 		if determineIfProceed(&h) {
 			bar.Increment()
-			time.Sleep(time.Millisecond * 1)
+			time.Sleep(time.Millisecond * 3)
 			i++
 		} else {
-			time.Sleep(time.Millisecond * 1)
+			time.Sleep(time.Millisecond * 3)
 		}
 	}
+
+	// Write the
+	out <- index
 
 	// fmt.Printf("Horse %d, %s, has finished with speed %.2f!\n", index, h.Name, h.Speed)
 
 }
 
-func horseRacer(index int, h Horse, wg *sync.WaitGroup) {
+func horseRacer(index int, h models.Horse, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	count := 0
@@ -126,7 +160,7 @@ func horseRacer(index int, h Horse, wg *sync.WaitGroup) {
 	fmt.Printf("Horse %d, %s, has finished with speed %.2f!\n", index, h.Name, h.Speed)
 }
 
-func determineIfProceed(h *Horse) bool {
+func determineIfProceed(h *models.Horse) bool {
 	// The maximum value of the horse speed is 20, since the maximum horse
 	// value is 10, and the maximum horse jocket benefit is 100%.
 	roll := 0.0 + r1.Float64()*(20.0-0.0)
@@ -138,9 +172,56 @@ func determineIfProceed(h *Horse) bool {
 	return false
 }
 
-func ShowRace() {
+func ShowRace(m *economy.Money) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	r := GenerateRace(6, "fast", 0.75)
 
-	makeRaceBars(r.Horses)
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	printRace(w, r.Horses)
+
+	choiceMap, err := ui.ShowList(getHorseNames(r.Horses))
+	if err != nil {
+		panic(err)
+	}
+
+	winner := makeRaceBars(r.Horses)
+
+	fmt.Printf("The winner is %s!\n", winner.Name)
+
+	if choiceMap.Name == winner.Name {
+		m.UpdateMoney(choiceMap.Bet, winner.Odds)
+	} else {
+		*m = *m - choiceMap.Bet
+	}
+
+	fmt.Printf("Your new money is %.2f\n", *m)
+}
+
+func getHorseNames(h []models.Horse) []string {
+	names := make([]string, len(h))
+
+	for i, v := range h {
+		names[i] = v.Name
+	}
+
+	return names
+}
+
+func printRace(w *tabwriter.Writer, hs []models.Horse) {
+	t := tabby.NewCustom(w)
+
+	sort.SliceStable(hs, func(i, j int) bool {
+		return hs[i].Odds < hs[j].Odds
+	})
+
+	fmt.Printf("The standings are as follows:\n")
+	t.AddHeader("NAME", "ODDS", "WINS", "PLACES", "SHOWS")
+
+	for i := 0; i < len(hs); i++ {
+		h := hs[i]
+		t.AddLine(h.Name, fmt.Sprintf("%.2f", h.Odds), h.Record.Wins, h.Record.Places, h.Record.Shows)
+	}
+
+	t.Print()
+
 }

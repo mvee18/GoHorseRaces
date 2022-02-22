@@ -1,8 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"horses/economy"
+	"horses/models"
+	"sync"
 	"testing"
+	"text/tabwriter"
 )
 
 func TestGenerateRace(t *testing.T) {
@@ -17,19 +22,19 @@ func TestGenerateRace(t *testing.T) {
 	})
 
 	t.Run("Test normalize speed", func(t *testing.T) {
-		h1 := Horse{
+		h1 := models.Horse{
 			Name:  "tester1",
-			Speed: 8.123,
+			Speed: 8.0,
 		}
 
-		h2 := Horse{
+		h2 := models.Horse{
 			Name:  "tester2",
-			Speed: 123.67,
+			Speed: 64.00,
 		}
 
-		horses := []Horse{h1, h2}
+		horses := []models.Horse{h1, h2}
 
-		normalizeSpeed(horses)
+		economy.NormalizeSpeed(horses)
 
 		h1want := h1.Speed / h1.Speed
 		h2want := h2.Speed / h1.Speed
@@ -41,12 +46,53 @@ func TestGenerateRace(t *testing.T) {
 		if horses[1].Speed != h2want {
 			t.Errorf("wrong h2 speed, wanted %v got %v\n", h2want, horses[1].Speed)
 		}
+
 	})
 
 }
 
 func TestShowRace(t *testing.T) {
 	t.Run("testing race", func(t *testing.T) {
-		ShowRace()
+		m := economy.Money(200.0)
+		ShowRace(&m)
 	})
+}
+
+// Not sure why the test prints blank string to the buffer?
+func TestPrintResults(t *testing.T) {
+	hs := []models.Horse{
+		{
+			Name: "first",
+			Odds: 26.1,
+		},
+		{
+			Name: "second",
+			Odds: 6.0,
+		},
+		{
+			Name: "third",
+			Odds: 3.0,
+		},
+	}
+
+	results := make(chan int, 3)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	for i := 0; i < len(hs); i++ {
+		go func(i int) {
+			defer wg.Done()
+			results <- i
+		}(i)
+	}
+
+	wg.Wait()
+
+	var b bytes.Buffer
+	w := tabwriter.NewWriter(&b, 0, 0, 2, ' ', 0)
+
+	printResults(w, hs, results)
+
+	fmt.Println(b.String())
 }

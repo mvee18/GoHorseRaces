@@ -1,0 +1,62 @@
+# github.com/VividCortex/ewma v1.2.0
+## explicit
+github.com/VividCortex/ewma
+# github.com/atotto/clipboard v0.1.4
+github.com/atotto/clipboard
+# github.com/charmbracelet/bubbles v0.10.2
+## explicit
+github.com/charmbracelet/bubbles/textinput
+# github.com/charmbracelet/bubbletea v0.19.3
+github.com/charmbracelet/bubbletea
+# github.com/charmbracelet/lipgloss v0.4.0
+github.com/charmbracelet/lipgloss
+# github.com/cheynewallace/tabby v1.1.1
+## explicit
+github.com/cheynewallace/tabby
+# github.com/containerd/console v1.0.2
+github.com/containerd/console
+# github.com/erikgeiser/promptkit v0.6.0
+## explicit
+github.com/erikgeiser/promptkit
+github.com/erikgeiser/promptkit/selection
+github.com/erikgeiser/promptkit/textinput
+# github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
+## explicit
+github.com/goombaio/namegenerator
+# github.com/lucasb-eyer/go-colorful v1.2.0
+github.com/lucasb-eyer/go-colorful
+# github.com/mattn/go-isatty v0.0.14
+## explicit
+github.com/mattn/go-isatty
+# github.com/mattn/go-runewidth v0.0.13
+github.com/mattn/go-runewidth
+# github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b
+github.com/muesli/ansi
+github.com/muesli/ansi/compressor
+# github.com/muesli/reflow v0.3.0
+github.com/muesli/reflow/ansi
+github.com/muesli/reflow/truncate
+github.com/muesli/reflow/wordwrap
+github.com/muesli/reflow/wrap
+# github.com/muesli/termenv v0.9.0
+github.com/muesli/termenv
+# github.com/pkg/errors v0.9.1
+github.com/pkg/errors
+# github.com/rivo/uniseg v0.2.0
+github.com/rivo/uniseg
+# github.com/vbauerster/mpb v3.4.0+incompatible
+## explicit
+github.com/vbauerster/mpb
+github.com/vbauerster/mpb/cwriter
+github.com/vbauerster/mpb/decor
+github.com/vbauerster/mpb/internal
+# golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
+## explicit
+golang.org/x/crypto/ssh/terminal
+# golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/plan9
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
+golang.org/x/term
