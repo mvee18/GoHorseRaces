@@ -82,7 +82,9 @@ func makeRaceBars(hs []models.Horse) models.Horse {
 		}
 	*/
 
-	wg.Wait()
+	p.Wait()
+
+	time.Sleep(time.Millisecond * 200)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
@@ -184,11 +186,15 @@ func ShowRace(m *economy.Money) {
 
 	winner := makeRaceBars(r.Horses)
 
+	fmt.Printf("The winner is %s!\n", winner.Name)
+
 	if choiceMap.Name == winner.Name {
 		m.UpdateMoney(choiceMap.Bet, winner.Odds)
 	} else {
 		*m = *m - choiceMap.Bet
 	}
+
+	fmt.Printf("Your new money is %.2f\n", *m)
 }
 
 func getHorseNames(h []models.Horse) []string {

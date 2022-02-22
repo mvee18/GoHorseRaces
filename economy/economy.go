@@ -1,6 +1,7 @@
 package economy
 
 import (
+	"fmt"
 	"horses/models"
 	"sort"
 )
@@ -93,5 +94,7 @@ func NormalizeSpeed(h []models.Horse) {
 // < ---- User Actions and Inputs ---- >
 
 func (m *Money) UpdateMoney(bet Money, odds float64) {
-	*m = bet * Money(odds)
+	winnings := bet * Money(odds)
+	*m += winnings
+	fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f", winnings, *m)
 }
