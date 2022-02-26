@@ -2,20 +2,18 @@ package ui
 
 import (
 	"fmt"
-	"horses/economy"
 	"os"
 	"strconv"
 
 	"github.com/erikgeiser/promptkit/selection"
 	"github.com/erikgeiser/promptkit/textinput"
+	"horses/models"
 )
 
-type ChoiceStruct struct {
-	Name string
-	Bet  economy.Money
-}
+var BetList = []string{"Win", "Place", "Show"}
 
-func ShowList(choices []string) (ChoiceStruct, error) {
+func ShowList(hs []models.Horse) (models.ChoiceStruct, error) {
+	choices := getHorseNames(hs)
 	c := horseList(choices)
 
 	verified := false
@@ -28,12 +26,24 @@ func ShowList(choices []string) (ChoiceStruct, error) {
 		}
 	}
 
+	btype := betType()
+
 	bet, err := getBet(c)
 	if err != nil {
-		return ChoiceStruct{}, err
+		return models.ChoiceStruct{}, err
 	}
 
-	return ChoiceStruct{Name: c.String, Bet: bet}, nil
+	return models.ChoiceStruct{Name: c.String, Bet: bet, BetType: btype}, nil
+}
+
+func getHorseNames(h []models.Horse) []string {
+	names := make([]string, len(h))
+
+	for i, v := range h {
+		names[i] = v.Name
+	}
+
+	return names
 }
 
 func horseList(c []string) *selection.Choice {
@@ -70,7 +80,23 @@ func verifyChoice(s *selection.Choice) bool {
 	}
 }
 
-func getBet(choice *selection.Choice) (economy.Money, error) {
+func betType() string {
+	sp := selection.New("Which type of bet do you wish to place?",
+		selection.Choices(BetList))
+	sp.PageSize = len(BetList)
+
+	choice, err := sp.RunPrompt()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+
+		os.Exit(1)
+	}
+
+	return choice.String
+
+}
+
+func getBet(choice *selection.Choice) (models.Money, error) {
 	input := textinput.New(fmt.Sprintf("How much do you want to bet on %s?", choice.String))
 	input.Placeholder = "You cannot bet $0."
 
@@ -87,5 +113,5 @@ func getBet(choice *selection.Choice) (economy.Money, error) {
 		return 0.0, err
 	}
 
-	return economy.Money(bet), nil
+	return models.Money(bet), nil
 }

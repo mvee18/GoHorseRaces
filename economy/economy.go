@@ -1,22 +1,21 @@
 package economy
 
 import (
-	"fmt"
 	"horses/models"
 	"sort"
 )
 
-type Money float64
 
 type OddsPool struct {
 	Index     int
-	Wager     Money
+	Wager     models.Money
 	Frequency float64
 }
 
 const takePercentage = 0.15
+var TotalWager = 0.0
 
-func CalculateOdds(bet Money, total Money) float64 {
+func CalculateOdds(bet models.Money, total models.Money) float64 {
 	total -= total * takePercentage
 	leftOver := total - bet
 
@@ -25,12 +24,12 @@ func CalculateOdds(bet Money, total Money) float64 {
 
 func DistributeMoney(r *models.Race) {
 	// Somewhere between 0-100000, but mostly around 50,000.
-	totalWager := models.R1.NormFloat64()*25000 + 50000
+	TotalWager = models.R1.NormFloat64()*25000 + 50000
 
-	fractionalSpeed(Money(totalWager), &r.Horses, CalculateOdds)
+	fractionalSpeed(models.Money(TotalWager), &r.Horses, CalculateOdds)
 }
 
-func fractionalSpeed(total Money, hs *[]models.Horse, c func(Money, Money) float64) {
+func fractionalSpeed(total models.Money, hs *[]models.Horse, c func(models.Money, models.Money) float64) {
 	oddsPools := make([]OddsPool, len(*hs))
 	totalAttractiveness := 0.0
 
@@ -54,13 +53,14 @@ func fractionalSpeed(total Money, hs *[]models.Horse, c func(Money, Money) float
 	rouletteDistribution(total, &oddsPools)
 
 	for i := range *hs {
+		(*hs)[i].Wager = float64(oddsPools[i].Wager)
 		(*hs)[i].Odds = c(oddsPools[i].Wager, total)
 	}
 
 	// fmt.Println(hs)
 }
 
-func rouletteDistribution(total Money, o *[]OddsPool) {
+func rouletteDistribution(total models.Money, o *[]OddsPool) {
 	sort.SliceStable(*o, func(i, j int) bool {
 		return (*o)[i].Frequency < (*o)[j].Frequency
 	})
@@ -93,8 +93,12 @@ func NormalizeSpeed(h []models.Horse) {
 
 // < ---- User Actions and Inputs ---- >
 
-func (m *Money) UpdateMoney(bet Money, odds float64) {
-	winnings := bet * Money(odds)
-	*m += winnings
-	fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f", winnings, *m)
+func UpdateMoney(m *models.Money, btype string, choice string, rankings []models.Horse) {
+	switch btype {
+	case "Win":
+
+	}
+	//	winnings := bet * models.Money(odds)
+	//	*m += winnings
+	//	fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f", winnings, *m)
 }

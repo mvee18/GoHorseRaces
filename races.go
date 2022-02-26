@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cheynewallace/tabby"
+	"github.com/kyokomi/emoji/v2"
 	"github.com/vbauerster/mpb"
 	"github.com/vbauerster/mpb/decor"
 )
@@ -40,7 +41,7 @@ func GenerateRace(n int, w string, l float64) models.Race {
 	return r
 }
 
-func makeRaceBars(hs []models.Horse) models.Horse {
+func makeRaceBars(hs []models.Horse) []models.Horse {
 	// start the progress bars in go routines
 	results := make(chan int, len(hs))
 	var wg sync.WaitGroup
@@ -53,9 +54,10 @@ func makeRaceBars(hs []models.Horse) models.Horse {
 	Shuffle(hs)
 
 	wg.Add(numBars)
+	emojiLine := emoji.Sprint("[=:horse:-]<+")
 
 	for i := 0; i < numBars; i++ {
-		name := fmt.Sprintf("Horse %d:", i)
+		name := fmt.Sprintf("%s", hs[i].Name)
 		bar := p.AddBar(int64(total),
 			mpb.PrependDecorators(
 				// simple name decorator
@@ -70,7 +72,10 @@ func makeRaceBars(hs []models.Horse) models.Horse {
 					decor.EwmaETA(decor.ET_STYLE_GO, 60, decor.WCSyncWidth), "done",
 				),
 			),
+			mpb.BarStyle(emojiLine),
+			//mpb.BarStyle("[=H-]<+"),
 		)
+
 
 		go addHorseBar(i, bar, total, hs[i], &wg, results)
 	}
@@ -88,29 +93,32 @@ func makeRaceBars(hs []models.Horse) models.Horse {
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
-	winner := printResults(w, hs, results)
+	rankings := printResults(w, hs, results)
 	w.Flush()
 
-	return winner
+	return rankings
 }
 
-func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) models.Horse {
+func printResults(w *tabwriter.Writer, hs []models.Horse, results chan int) []models.Horse {
 	t := tabby.NewCustom(w)
 
 	fmt.Printf("The standings are as follows:\n")
 	t.AddHeader("PLACEMENT", "NAME", "ODDS")
 
+	rankings := make([]models.Horse, len(hs))
+
 	for i := 0; i < len(hs); i++ {
 		select {
-		case winner := <-results:
-			h := hs[winner]
+		case placement := <-results:
+			h := hs[placement]
+			rankings[i] = hs[i]
 			t.AddLine(i, h.Name, fmt.Sprintf("%.2f", h.Odds))
 		}
 	}
 
 	t.Print()
 
-	return hs[0]
+	return rankings
 }
 
 func Shuffle(vals []models.Horse) {
@@ -172,40 +180,33 @@ func determineIfProceed(h *models.Horse) bool {
 	return false
 }
 
-func ShowRace(m *economy.Money) {
+func ShowRace(m *models.Money) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	r := GenerateRace(6, "fast", 0.75)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	printRace(w, r.Horses)
 
-	choiceMap, err := ui.ShowList(getHorseNames(r.Horses))
+	choiceStruct, err := ui.ShowList(r.Horses)
 	if err != nil {
 		panic(err)
 	}
 
-	winner := makeRaceBars(r.Horses)
+	rankings := makeRaceBars(r.Horses)
+	winner := rankings[0]
 
-	fmt.Printf("The winner is %s!\n", winner.Name)
+	fmt.Printf("The winner is %s!\n", rankings[0].Name)
 
-	if choiceMap.Name == winner.Name {
-		m.UpdateMoney(choiceMap.Bet, winner.Odds)
+	if choiceStruct.Name == winner.Name {
+		economy.UpdateMoney(m, choiceStruct.BetType, choiceStruct.Name, rankings)
 	} else {
-		*m = *m - choiceMap.Bet
+		*m = *m - choiceStruct.Bet
 	}
 
 	fmt.Printf("Your new money is %.2f\n", *m)
 }
 
-func getHorseNames(h []models.Horse) []string {
-	names := make([]string, len(h))
 
-	for i, v := range h {
-		names[i] = v.Name
-	}
-
-	return names
-}
 
 func printRace(w *tabwriter.Writer, hs []models.Horse) {
 	t := tabby.NewCustom(w)

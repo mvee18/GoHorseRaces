@@ -23,6 +23,9 @@ github.com/erikgeiser/promptkit/textinput
 # github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 ## explicit
 github.com/goombaio/namegenerator
+# github.com/kyokomi/emoji/v2 v2.2.8
+## explicit
+github.com/kyokomi/emoji/v2
 # github.com/lucasb-eyer/go-colorful v1.2.0
 github.com/lucasb-eyer/go-colorful
 # github.com/mattn/go-isatty v0.0.14

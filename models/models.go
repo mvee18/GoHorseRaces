@@ -26,9 +26,18 @@ type Horse struct {
 	Attractiveness float64
 	Speed          float64
 	Odds           float64
+	Wager          float64
 	Jockey
 	Record
 }
+
+type ChoiceStruct struct {
+	Name        string
+	Bet         Money
+	BetType string
+}
+
+type Money float64
 
 func (h *Horse) generateRecord() {
 	// A random number of a random number within 10 for the total of races
