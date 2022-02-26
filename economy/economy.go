@@ -1,10 +1,10 @@
 package economy
 
 import (
+	"fmt"
 	"horses/models"
 	"sort"
 )
-
 
 type OddsPool struct {
 	Index     int
@@ -13,6 +13,7 @@ type OddsPool struct {
 }
 
 const takePercentage = 0.15
+
 var TotalWager = 0.0
 
 func CalculateOdds(bet models.Money, total models.Money) float64 {
@@ -93,12 +94,14 @@ func NormalizeSpeed(h []models.Horse) {
 
 // < ---- User Actions and Inputs ---- >
 
-func UpdateMoney(m *models.Money, btype string, choice string, rankings []models.Horse) {
-	switch btype {
+func UpdateMoney(m *models.Money, c models.ChoiceStruct, rankings []models.Horse) {
+	switch c.BetType {
 	case "Win":
-
+		winner := rankings[0]
+		if c.Name == winner.Name {
+			winnings := c.Bet * models.Money(winner.Odds)
+			*m += winnings
+			fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f\n", winnings, *m)
+		}
 	}
-	//	winnings := bet * models.Money(odds)
-	//	*m += winnings
-	//	fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f", winnings, *m)
 }

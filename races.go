@@ -198,7 +198,7 @@ func ShowRace(m *models.Money) {
 	fmt.Printf("The winner is %s!\n", rankings[0].Name)
 
 	if choiceStruct.Name == winner.Name {
-		economy.UpdateMoney(m, choiceStruct.BetType, choiceStruct.Name, rankings)
+		economy.UpdateMoney(m, choiceStruct, rankings)
 	} else {
 		*m = *m - choiceStruct.Bet
 	}

@@ -76,6 +76,37 @@ func ChiSquareHelper(t *testing.T, exp []float64, o []float64) float64 {
 }
 
 // This just sets the odds to the wager so we can verify that the odds are correct with ChiSq.
-func MockCalculateOdds(bet Money, total Money) float64 {
+func MockCalculateOdds(bet models.Money, total models.Money) float64 {
 	return float64(bet)
+}
+
+func TestUpdateMoney(t *testing.T) {
+	h1 := models.Horse{
+		Name: "winner",
+		Odds: 2.0,
+	}
+
+	h2 := models.Horse{
+		Name: "loser",
+		Odds: 5.0,
+	}
+
+	t.Run("testing winner", func(t *testing.T) {
+		money := models.Money(50.0)
+		c := models.ChoiceStruct{
+			Name:    "winner",
+			Bet:     2.0,
+			BetType: "Win",
+		}
+
+		rankings := []models.Horse{h1, h2}
+
+		UpdateMoney((&money), c, rankings)
+
+		want := models.Money(54.0)
+
+		if money != want {
+			t.Errorf("wrong money, wanted %v, got %v\n", want, money)
+		}
+	})
 }
