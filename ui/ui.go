@@ -2,17 +2,19 @@ package ui
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 
+	"horses/models"
+
 	"github.com/erikgeiser/promptkit/selection"
 	"github.com/erikgeiser/promptkit/textinput"
-	"horses/models"
 )
 
-var BetList = []string{"Win", "Place", "Show"}
+var BetList = []string{"Win", "Place"}
 
-func ShowList(hs []models.Horse) (models.ChoiceStruct, error) {
+func ShowList(hs []models.Horse, m *models.Money) (models.ChoiceStruct, error) {
 	choices := getHorseNames(hs)
 	c := horseList(choices)
 
@@ -28,7 +30,7 @@ func ShowList(hs []models.Horse) (models.ChoiceStruct, error) {
 
 	btype := betType()
 
-	bet, err := getBet(c)
+	bet, err := getBet(c, m)
 	if err != nil {
 		return models.ChoiceStruct{}, err
 	}
@@ -96,9 +98,9 @@ func betType() string {
 
 }
 
-func getBet(choice *selection.Choice) (models.Money, error) {
-	input := textinput.New(fmt.Sprintf("How much do you want to bet on %s?", choice.String))
-	input.Placeholder = "You cannot bet $0."
+func getBet(choice *selection.Choice, m *models.Money) (models.Money, error) {
+	input := textinput.New(fmt.Sprintf("How much do you want to bet on %s? You have $%.2f", choice.String, *m))
+	input.Placeholder = "You cannot bet nothing."
 
 	resp, err := input.RunPrompt()
 	if err != nil {
@@ -107,11 +109,23 @@ func getBet(choice *selection.Choice) (models.Money, error) {
 		os.Exit(1)
 	}
 
-	// do something with the result
 	bet, err := strconv.ParseFloat(resp, 64)
 	if err != nil {
 		return 0.0, err
 	}
+
+	bet = math.Abs(bet)
+
+	for bet > float64(*m) {
+		fmt.Printf("You cannot bet more money than you have! You have $%.2f\n", *m)
+		newBet, err := getBet(choice , m)
+		if err != nil {
+			return 0.0, err
+		}
+
+		bet = float64(newBet)
+	}
+
 
 	return models.Money(bet), nil
 }

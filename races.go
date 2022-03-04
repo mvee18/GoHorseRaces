@@ -187,23 +187,18 @@ func ShowRace(m *models.Money) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	printRace(w, r.Horses)
 
-	choiceStruct, err := ui.ShowList(r.Horses)
+	choiceStruct, err := ui.ShowList(r.Horses, m)
 	if err != nil {
 		panic(err)
 	}
 
 	rankings := makeRaceBars(r.Horses)
-	winner := rankings[0]
 
 	fmt.Printf("The winner is %s!\n", rankings[0].Name)
 
-	if choiceStruct.Name == winner.Name {
-		economy.UpdateMoney(m, choiceStruct, rankings)
-	} else {
-		*m = *m - choiceStruct.Bet
-	}
+	economy.UpdateMoney(m, choiceStruct, rankings)
 
-	fmt.Printf("Your new money is %.2f\n", *m)
+	fmt.Printf("Your new money is %.2f. Good luck!\n", *m)
 }
 
 
@@ -215,7 +210,7 @@ func printRace(w *tabwriter.Writer, hs []models.Horse) {
 		return hs[i].Odds < hs[j].Odds
 	})
 
-	fmt.Printf("The standings are as follows:\n")
+	fmt.Printf("The current odds are as follows:\n")
 	t.AddHeader("NAME", "ODDS", "WINS", "PLACES", "SHOWS")
 
 	for i := 0; i < len(hs); i++ {

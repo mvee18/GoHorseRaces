@@ -49,8 +49,8 @@ func TestFractionalSpeed(t *testing.T) {
 
 		x := ChiSquareHelper(t, exp, obs)
 
-		if x > 5.991 {
-			t.Errorf("chisq value greater than critical value of 2 df, got %v\n", x)
+		if x < 5.991 {
+			t.Errorf("chisq value not significantly different from normal distribution, got chisq %v\n", x)
 		}
 
 	})
@@ -107,6 +107,67 @@ func TestUpdateMoney(t *testing.T) {
 
 		if money != want {
 			t.Errorf("wrong money, wanted %v, got %v\n", want, money)
+		}
+	})
+
+}
+
+func TestCalcPlaceOdds(t *testing.T) {
+	h1 := models.Horse{
+		Name: "winner",
+		Wager: 8000,
+	}
+
+	h2 := models.Horse{
+		Name: "second",
+		Wager: 1500,
+	}
+
+	//	h3 := models.Horse{
+	//	Name: "second",
+	//	Odds: 500,
+	//}
+
+
+	t.Run("testing with first place winner", func(t *testing.T) {
+		c := models.ChoiceStruct{
+			Name: "winner",
+			Bet: 2.0,
+			BetType: "Place",
+		}
+
+		winnings := calcPlaceOdds(20000, h1, h2, c)
+
+		if winnings != 0.9375 {
+			t.Errorf("wrong winnings, wanted 0.9375, got %v\n", winnings)
+		}
+	})
+
+	t.Run("testing with second place", func(t *testing.T) {
+		c := models.ChoiceStruct{
+			Name: "second",
+			Bet: 2.0,
+			BetType: "Place",
+		}
+
+		winnings := calcPlaceOdds(20000, h1, h2, c)
+
+		if winnings != 5 {
+			t.Errorf("wrong winnings, wanted 2.5, got %v\n", winnings)
+		}
+	})
+
+	t.Run("testing loser", func(t *testing.T) {
+		c := models.ChoiceStruct{
+			Name: "loser",
+			Bet: 2.0,
+			BetType: "Place",
+		}
+
+		winnings := calcPlaceOdds(20000, h1, h2, c)
+
+		if winnings != -2.0 {
+			t.Errorf("wrong loss, wanted -2, got %v\n", winnings)
 		}
 	})
 }

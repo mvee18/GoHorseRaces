@@ -102,6 +102,39 @@ func UpdateMoney(m *models.Money, c models.ChoiceStruct, rankings []models.Horse
 			winnings := c.Bet * models.Money(winner.Odds)
 			*m += winnings
 			fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f\n", winnings, *m)
+		} else {
+			*m -= c.Bet
+			fmt.Printf("You lost! Your total is now: %.2f\n", *m)
+		}
+	case "Place":
+		winnings := calcPlaceOdds(TotalWager, rankings[0], rankings[2], c)
+		*m += winnings
+		if winnings > 0.0 {
+			fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f\n", winnings, *m)
+		} else {
+			fmt.Printf("You lost! Your total is now: %.2f\n", *m)
 		}
 	}
+}
+
+func calcPlaceOdds(totalMoney float64, winner1, winner2 models.Horse, c models.ChoiceStruct) models.Money {
+	// Total profit - amount wagered on each horse split evenly.
+	houseTake := totalMoney * takePercentage
+	profitPool := (totalMoney - houseTake - winner1.Wager - winner2.Wager)/2
+	if profitPool < 0 {
+		// Minus pool. Bettors are paid 0.05 per dollar.
+		return 0.05 * c.Bet
+	}
+	winner1Odds := profitPool / winner1.Wager
+	winner2Odds := profitPool / winner2.Wager
+
+	// No breakage. This is a terminal game.
+
+	if winner1.Name == c.Name {
+		return models.Money(winner1Odds) * c.Bet
+	} else if winner2.Name == c.Name {
+		return models.Money(winner2Odds) * c.Bet
+	}
+
+	return -c.Bet
 }
