@@ -171,3 +171,51 @@ func TestCalcPlaceOdds(t *testing.T) {
 		}
 	})
 }
+
+func TestCalcShowOdds(t *testing.T) {
+h1 := models.Horse{
+		Name: "winner",
+		Wager: 8000,
+	}
+
+	h2 := models.Horse{
+		Name: "second",
+		Wager: 1500,
+	}
+
+	h3 := models.Horse{
+		Name: "third",
+		Wager: 500,
+	}
+
+	hs := []models.Horse{h1, h2, h3}
+	t.Run("testing third place winner", func(t *testing.T) {
+	c := models.ChoiceStruct{
+			Name: "third",
+			Bet: 2.0,
+			BetType: "Show",
+		}
+
+		winnings := fmt.Sprintf("%.2f", calcShowOdds(15000, hs, c))
+		want := "3.67"
+		if winnings != want {
+			t.Errorf("wrong winnings, wanted %v, got %v\n", want, winnings)
+		}
+
+	})
+
+	t.Run("testing loser", func(t *testing.T) {
+		c := models.ChoiceStruct{
+				Name: "loser",
+				Bet: 2.0,
+				BetType: "Show",
+			}
+
+			winnings := fmt.Sprintf("%.2f", calcShowOdds(15000, hs, c))
+			want := "-2.00"
+			if winnings != want {
+				t.Errorf("wrong winnings, wanted %v, got %v\n", want, winnings)
+			}
+
+	})
+}

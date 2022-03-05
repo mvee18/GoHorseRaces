@@ -107,7 +107,17 @@ func UpdateMoney(m *models.Money, c models.ChoiceStruct, rankings []models.Horse
 			fmt.Printf("You lost! Your total is now: %.2f\n", *m)
 		}
 	case "Place":
-		winnings := calcPlaceOdds(TotalWager, rankings[0], rankings[2], c)
+		winnings := calcPlaceOdds(TotalWager, rankings[0], rankings[1], c)
+		*m += winnings
+		if winnings > 0.0 {
+			fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f\n", winnings, *m)
+		} else {
+			fmt.Printf("You lost! Your total is now: %.2f\n", *m)
+		}
+
+	case "Show":
+		hs := []models.Horse{rankings[0], rankings[1], rankings[2]}
+		winnings := calcShowOdds(TotalWager, hs, c)
 		*m += winnings
 		if winnings > 0.0 {
 			fmt.Printf("You won! The bet paid %.2f. Your total is now: %.2f\n", winnings, *m)
@@ -119,8 +129,8 @@ func UpdateMoney(m *models.Money, c models.ChoiceStruct, rankings []models.Horse
 
 func calcPlaceOdds(totalMoney float64, winner1, winner2 models.Horse, c models.ChoiceStruct) models.Money {
 	// Total profit - amount wagered on each horse split evenly.
-	houseTake := totalMoney * takePercentage
-	profitPool := (totalMoney - houseTake - winner1.Wager - winner2.Wager)/2
+	hs := []models.Horse{winner1, winner2}
+	profitPool := calcProfitPool(totalMoney, hs)
 	if profitPool < 0 {
 		// Minus pool. Bettors are paid 0.05 per dollar.
 		return 0.05 * c.Bet
@@ -137,4 +147,38 @@ func calcPlaceOdds(totalMoney float64, winner1, winner2 models.Horse, c models.C
 	}
 
 	return -c.Bet
+}
+
+func calcShowOdds(totalMoney float64, hs []models.Horse, c models.ChoiceStruct) models.Money {
+	profitPool := calcProfitPool(totalMoney, hs)
+	if profitPool < 0 {
+		return 0.05 * c.Bet
+	}
+
+	// Map of horse name: payout odds per dollar.
+	odds := map[string]float64{}
+	for _, v := range hs {
+		odds[v.Name] = profitPool / v.Wager
+	}
+
+	// Check if bet name is in the winners. If so, then return the odds times the bet.
+	val, ok := odds[c.Name]
+	if ok {
+		return models.Money(val) * c.Bet
+	} else {
+		return -c.Bet
+	}
+}
+
+func calcProfitPool(totalMoney float64, hs []models.Horse) float64 {
+	houseTake := totalMoney * takePercentage
+	wagerPool := 0.0
+
+	for _, v := range hs {
+		wagerPool += v.Wager
+	}
+
+	profitPool := (totalMoney - houseTake - wagerPool)/float64(len(hs))
+
+	return profitPool
 }

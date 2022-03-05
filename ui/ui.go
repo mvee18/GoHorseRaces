@@ -12,7 +12,7 @@ import (
 	"github.com/erikgeiser/promptkit/textinput"
 )
 
-var BetList = []string{"Win", "Place"}
+var BetList = []string{"Win", "Place", "Show"}
 
 func ShowList(hs []models.Horse, m *models.Money) (models.ChoiceStruct, error) {
 	choices := getHorseNames(hs)
